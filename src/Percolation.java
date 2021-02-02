@@ -1,11 +1,9 @@
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
+
 import java.util.Arrays;
-import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Percolation {
-    private final boolean[][] grid;
+    private final Boolean[][] grid;
     private int numberOfOpenSites;
     private final int gridSize;
     private final int top;
@@ -16,75 +14,82 @@ public class Percolation {
         if (n <= 0) {
             throw new IllegalArgumentException();
         }
-
         this.gridSize = n;
-        this.grid = new boolean[n][n];
+        this.grid = new Boolean[n][n];
         this.numberOfOpenSites = 0;
         this.top = 0;
-        this.bottom = (n * n) + 2;
-        this.weightedQuickUnionUF = new WeightedQuickUnionUF((bottom));
+        this.bottom = (n * n) + 1;
+        this.weightedQuickUnionUF = new WeightedQuickUnionUF(((n * n) + 2));
     }
 
-    public void open(int row, int col) {
-
-        int shiftDown = row - 1;
-        int shiftLeft = col - 1;
-
+    public void open(int i, int j) {
+        int row = i - 1;
+        int col = j - 1;
         if (row < 0 || col < 0 || row > gridSize || col > gridSize) {
             throw new IllegalArgumentException();
         }
-
-        if (isFull(row, col)) {
+        if (grid[row][col] == null) {
+            grid[row][col] = false;
+        } else {
             return;
         }
-
-        this.grid[shiftDown][shiftLeft] = true;
-        connected(row, col);
+        if (row + 1 < gridSize && grid[row + 1][col] != null) {
+            if (isOpen(i + 1, j)) {
+                weightedQuickUnionUF.union(xyTo1D(row + 1, col), xyTo1D(row, col));
+            }
+        }
+        if (col + 1 < gridSize && grid[row][col + 1] != null) {
+            if (isOpen(i, j + 1)) {
+                weightedQuickUnionUF.union(xyTo1D(row, col + 1), xyTo1D(row, col));
+            }
+        }
+        if (row - 1 >= 0 && grid[row - 1][col] != null) {
+            if (isOpen(i - 1, j)) {
+                weightedQuickUnionUF.union(xyTo1D(row - 1, col), xyTo1D(row, col));
+            }
+        }
+        if (col - 1 >= 0 && grid[row][col - 1] != null) {
+            if (isOpen(i , j - 1)) {
+                weightedQuickUnionUF.union(xyTo1D(row, col - 1), xyTo1D(row, col));
+            }
+        }
+        if (row == 0) {
+            weightedQuickUnionUF.union(xyTo1D(row, col), top);
+            grid[row][col] = true;
+        }
+        if (row == gridSize - 1) {
+            weightedQuickUnionUF.union(xyTo1D(row, col), bottom);
+            grid[row][col] = true;
+        }
         numberOfOpenSites++;
     }
 
-    private void connected(int row, int col) {
 
-        int north = row - 1;
-        int south = row + 1;
-        int east = col - 1;
-        int west = col + 1;
-
-        if (isOnGrid(north, col) && isFull(north,col)) {
-            LOGGER.log(Level.INFO,"Checking north...");
-            weightedQuickUnionUF.union(xyTo1D(row, col), (xyTo1D(north, col)));
-            LOGGER.log(Level.INFO, "Connected north " + row + " & " + north);
-        }
-        if (isOnGrid(south,col) && isFull(south,col)) {
-            LOGGER.log(Level.INFO,"Checking south...");
-            weightedQuickUnionUF.union(xyTo1D(row, col), (xyTo1D(south, col)));
-            LOGGER.log(Level.INFO,"Connected south " + row + " & " + south);
-        }
-        if (isOnGrid(row,east) && isFull(row,east)) {
-            LOGGER.log(Level.INFO,"Checking east...");
-            weightedQuickUnionUF.union(xyTo1D(row, col), (xyTo1D(row, east)));
-            LOGGER.log(Level.INFO,"Connected east " + col + " & " + east);
-
-        }
-        if (isOnGrid(row, west) && isFull(row, west)) {
-            LOGGER.log(Level.INFO,"Checking west...");
-            weightedQuickUnionUF.union(xyTo1D(row, col), (xyTo1D(row, west)));
-            LOGGER.log(Level.INFO, "Connected west " + col + " & " + west);
-        }
-    }
-
-    public boolean isOpen(int row, int col) {
+    public boolean isOpen(int i, int j) {
+        int row = i - 1;
+        int col = j - 1;
         if (row < 0 || col < 0 || row > gridSize || col > gridSize ) {
             throw new IllegalArgumentException();
         }
-        return !grid[row - 1][col - 1];
+        if (grid[row][col] == null) {
+            return false;
+        }
+        if (grid[row][col]) {
+            return isFull(i,j);
+        }
+        return !grid[row][col];
     }
 
-    public boolean isFull(int row, int col) {
+    public boolean isFull(int i, int j) {
+        int row = i - 1;
+        int col = j - 1;
         if (row < 0 || col < 0 || row > gridSize  || col > gridSize ) {
             throw new IllegalArgumentException();
         }
-        return grid[row - 1][col - 1];
+        if (grid[row][col] == null) {
+            return false;
+        }
+        return grid[row][col];
     }
 
     public int numberOfOpenSites() {
@@ -95,31 +100,26 @@ public class Percolation {
         return weightedQuickUnionUF.find(this.top) == weightedQuickUnionUF.find(this.bottom);
     }
 
-    private boolean isOnGrid(int row, int col) {
-        return row - 1 >= 0 && col - 1 >= 0 && row <= gridSize && col <= gridSize;
-    }
-
     private int xyTo1D(int row, int col) {
         if (row < 0 || col < 0) {
             throw new IllegalArgumentException();
         }
-        return gridSize * (row - 1) + col;
+        return ((row * gridSize) + col) + 1;
     }
-
-    private static final Logger LOGGER = Logger.getLogger(Percolation.class.getName());
 
     @Override
     public String toString() {
-        return "Percolation { " +
-                "grid="  + Arrays.deepToString(grid) + '}';
+        return "Percolation " +
+                "grid= " + Arrays.deepToString(grid);
     }
 
     public static void main(String[] args) {
         Percolation percolation = new Percolation(3);
-        percolation.open(1,3);
         percolation.open(1,1);
-        percolation.open(1,2);
-        percolation.percolates();
+        percolation.open(2,1);
+        percolation.open(3,1);
+        percolation.open(3,2);
+        System.out.println(percolation.percolates());
         System.out.println(percolation);
     }
 }
