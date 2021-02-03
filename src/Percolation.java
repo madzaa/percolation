@@ -1,7 +1,5 @@
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
-import java.util.Arrays;
-
 public class Percolation {
     private final Boolean[][] grid;
     private int numberOfOpenSites;
