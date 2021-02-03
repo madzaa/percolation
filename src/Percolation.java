@@ -28,29 +28,43 @@ public class Percolation {
         if (row < 0 || col < 0 || row > gridSize || col > gridSize) {
             throw new IllegalArgumentException();
         }
+
         if (grid[row][col] == null) {
             grid[row][col] = false;
         } else {
             return;
         }
+
         if (row + 1 < gridSize && grid[row + 1][col] != null) {
             if (isOpen(i + 1, j)) {
                 weightedQuickUnionUF.union(xyTo1D(row + 1, col), xyTo1D(row, col));
+                if (grid[row + 1][col]) {
+                    grid[row][col] = true;
+                }
             }
         }
         if (col + 1 < gridSize && grid[row][col + 1] != null) {
             if (isOpen(i, j + 1)) {
                 weightedQuickUnionUF.union(xyTo1D(row, col + 1), xyTo1D(row, col));
+                if (grid[row][col + 1]) {
+                    grid[row][col] = true;
+                }
             }
         }
         if (row - 1 >= 0 && grid[row - 1][col] != null) {
             if (isOpen(i - 1, j)) {
                 weightedQuickUnionUF.union(xyTo1D(row - 1, col), xyTo1D(row, col));
+                if (grid[row - 1][col]) {
+                    grid[row][col] = true;
+                }
             }
         }
         if (col - 1 >= 0 && grid[row][col - 1] != null) {
             if (isOpen(i , j - 1)) {
                 weightedQuickUnionUF.union(xyTo1D(row, col - 1), xyTo1D(row, col));
+                if (grid[row][col - 1]) {
+                    grid[row][col] = true;
+                }
             }
         }
         if (row == 0) {
@@ -59,11 +73,9 @@ public class Percolation {
         }
         if (row == gridSize - 1) {
             weightedQuickUnionUF.union(xyTo1D(row, col), bottom);
-            grid[row][col] = true;
         }
         numberOfOpenSites++;
     }
-
 
     public boolean isOpen(int i, int j) {
         int row = i - 1;
@@ -89,7 +101,7 @@ public class Percolation {
         if (grid[row][col] == null) {
             return false;
         }
-        return grid[row][col];
+        return weightedQuickUnionUF.find(top) == weightedQuickUnionUF.find(xyTo1D(row, col));
     }
 
     public int numberOfOpenSites() {
@@ -105,21 +117,5 @@ public class Percolation {
             throw new IllegalArgumentException();
         }
         return ((row * gridSize) + col) + 1;
-    }
-
-    @Override
-    public String toString() {
-        return "Percolation " +
-                "grid= " + Arrays.deepToString(grid);
-    }
-
-    public static void main(String[] args) {
-        Percolation percolation = new Percolation(3);
-        percolation.open(1,1);
-        percolation.open(2,1);
-        percolation.open(3,1);
-        percolation.open(3,2);
-        System.out.println(percolation.percolates());
-        System.out.println(percolation);
     }
 }
